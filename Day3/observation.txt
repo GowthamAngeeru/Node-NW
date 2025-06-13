@@ -1,0 +1,4 @@
+When I'm tried to import user and password from .env file.It returned error of "mangooseParseError", to debug I used "encodeURIComponent"
+
+const encodedUser = encodeURIComponent(DB_USER);
+const encodedPass = encodeURIComponent(DB_PASSWORD);
