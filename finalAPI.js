@@ -1,34 +1,31 @@
 const express = require("express");
-const short = require("short-uuid");
+
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
+dotenv.config();
+const { PORT, DB_USER, DB_PASSWORD } = process.env;
 const app = express();
+const UserModel = require("./UserModel");
+const ProductModel = require("./ProductModel");
 
-const fs = require("fs");
-const { use } = require("react");
+const {
+	getAllFactory,
+	createFactory,
+	getByIdFactory,
+	deleteByIdFactory,
+} = require("./utility/crudFactory.js");
 
-const strContent = fs.readFileSync("./dev-data.json", "utf-8");
-const userDataStore = JSON.parse(strContent);
-
-app.get("/api/user", function (request, response) {
-	try {
-		console.log("I am inside get method");
-		if (userDataStore.length == 0) {
-			throw new Error("No User Found");
-		}
-		response.status(200).json({
-			status: "success",
-			message: userDataStore,
-		});
-	} catch (err) {
-		response.status(404).json({
-			status: "failure",
-			message: err.message,
-		});
-	}
-});
+const dbURL = `mongodb+srv://${DB_USER}:${DB_PASSWORD}@cluster0.whao5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+mongoose
+	.connect(dbURL)
+	.then(function (connection) {
+		console.log("Connection success");
+	})
+	.catch((err) => console.log(err));
 
 app.use(express.json());
 
-app.use(function (request, response, next) {
+const checkInput = function (request, response, next) {
 	if (request.method == "POST") {
 		const userDetails = request.body;
 		const isEmpty = !userDetails || Object.keys(userDetails).length == 0;
@@ -37,56 +34,31 @@ app.use(function (request, response, next) {
 				status: "failure",
 				message: "Data is Empty",
 			});
-		} else {
-			next();
 		}
 	} else {
 		next();
 	}
-});
+};
 
-app.post("/api/user", function (request, response) {
-	const id = short.generate();
-	const userDetails = request.body;
-	userDetails.id = id;
-	userDataStore.push(userDetails);
+const createUserHandler = createFactory(UserModel);
+const getUserById = getByIdFactory(UserModel);
+const getAllUsers = getAllFactory(UserModel);
+const deleteById = deleteByIdFactory(UserModel);
 
-	const strUserData = JSON.stringify(userDataStore);
-	fs.writeFileSync("./dev-data.json", strUserData);
+const createProductHandler = createFactory(ProductModel);
+const getAllProducts = getAllFactory(ProductModel);
+const getProductById = getByIdFactory(ProductModel);
+const deleteProductById = deleteByIdFactory(ProductModel);
 
-	response.status(200).json({
-		status: "success",
-		message: "got request from post method",
-	});
-});
+app.post("/api/user", createUserHandler);
+app.get("/api/user", getAllUsers);
+app.get("/api/user/:userId", getUserById);
+app.delete("/api/user/:userId", deleteById);
 
-app.get("/api/user/:userId", function (request, response) {
-	try {
-		const userId = request.params.userId;
-		const userDetails = getUserById(userId);
-		if (userDetails == "No User Found") {
-			throw new Error(`User with ${userId} Not Found`);
-		} else {
-			response.status(200).json({
-				status: "success",
-				message: userDetails,
-			});
-		}
-	} catch (err) {
-		response.status(404).json({
-			status: "failure",
-			message: err.message,
-		});
-	}
-});
-function getUserById(id) {
-	const user = userDataStore.find((eachUser) => eachUser.id == id);
-	if (user == undefined) {
-		return "No User Found";
-	} else {
-		return user;
-	}
-}
+app.post("/api/product", createProductHandler);
+app.get("/api/product", getAllProducts);
+app.get("/api/product/:productId", getProductById);
+app.delete("/api/product/:productId", deleteProductById);
 
 app.use(function (request, response) {
 	response.status(404).json({
@@ -94,8 +66,9 @@ app.use(function (request, response) {
 		message: "404 page not found",
 	});
 });
-const port = process.env.PORT || 3000;
 
-app.listen(port, function () {
-	console.log(`server running at ${port} port`);
+//app.use(checkInput);
+
+app.listen(PORT, function (request, response) {
+	console.log(`Server is running at ${PORT} port`);
 });

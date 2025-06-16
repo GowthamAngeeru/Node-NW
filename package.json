@@ -1,5 +1,5 @@
 {
-  "name": "ns",
+  "name": "day4",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -12,10 +12,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "nodemon": "^3.1.10",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "short-uuid": "^5.2.0"
+    "mongoose": "^8.15.2",
+    "nodemon": "^3.1.10"
   }
 }
